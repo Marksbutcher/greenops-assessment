@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: greenops
+      POSTGRES_PASSWORD: greenops
+      POSTGRES_DB: greenops_assessment
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U greenops -d greenops_assessment']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./packages/api
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    environment:
+      DATABASE_URL: postgresql://greenops:greenops@db:5432/greenops_assessment
+      JWT_SECRET: dev-secret-change-in-production
+      JWT_EXPIRY: 24h
+      APP_URL: http://localhost:5173
+      RESPONDENT_TOKEN_EXPIRY_DAYS: 30
+      PORT: 3000
+      NODE_ENV: development
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./packages/api/src:/app/src
+      - ./packages/api/migrations:/app/migrations
+      - ./packages/api/seeds:/app/seeds
+
+  web:
+    build:
+      context: ./packages/web
+      dockerfile: Dockerfile
+    ports:
+      - '5173:5173'
+    environment:
+      VITE_API_URL: http://localhost:3000
+    volumes:
+      - ./packages/web/src:/app/src
+
+volumes:
+  pgdata:
