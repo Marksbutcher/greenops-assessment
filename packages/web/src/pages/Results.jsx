@@ -331,277 +331,444 @@ export default function Results() {
     const doc = new jsPDF();
     const exportData = getExportData();
     const date = formatDate();
+    const pageW = 210;
+    const margin = 20;
+    const contentW = pageW - margin * 2;
+    const bottomLimit = 272;
 
-    // ---- Page 1 — Title, overall score, characteristics, strengths/priorities ----
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(22);
-    doc.setTextColor(15, 31, 46);
-    doc.text('GreenOps Organisational', 105, 35, { align: 'center' });
-    doc.text('Assessment Report', 105, 46, { align: 'center' });
-
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(90, 106, 122);
-    doc.text(`Organisation: ${organisation.name}`, 20, 70);
-    doc.text(`Sector: ${organisation.sector}`, 20, 78);
-    doc.text(`Size: ${organisation.sizeBand}`, 20, 86);
-    let infoY = 86;
-    if (organisation.region) { infoY += 8; doc.text(`Region: ${organisation.region}`, 20, infoY); }
-    if (organisation.respondentName) { infoY += 8; doc.text(`Respondent: ${organisation.respondentName}`, 20, infoY); }
-    infoY += 8; doc.text(`Date: ${date}`, 20, infoY);
-
-    const scoreY = infoY + 20;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(16);
-    doc.setTextColor(15, 31, 46);
-    doc.text('Overall Maturity', 20, scoreY);
-
-    doc.setFontSize(36);
-    doc.setTextColor(0, 169, 150);
-    doc.text(`${Math.round(overall.percentage)}%`, 20, scoreY + 18);
-
-    doc.setFontSize(14);
-    doc.setTextColor(90, 106, 122);
-    doc.text(`${overall.totalRaw} / ${overall.totalMax}`, 65, scoreY + 18);
-
-    doc.setFontSize(14);
-    doc.setTextColor(15, 31, 46);
-    doc.text(`Level ${overall.maturity.level}: ${overall.maturity.name}`, 20, scoreY + 32);
-
-    // Overall characteristics paragraph
-    const overallDesc = OVERALL_MATURITY_CHARACTERISTICS[overall.maturity.name];
-    if (overallDesc) {
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(10);
-      doc.setTextColor(60, 60, 60);
-      const descLines = doc.splitTextToSize(overallDesc, 170);
-      doc.text(descLines, 20, scoreY + 42);
+    // Helper: add page footer with page number
+    function addFooter() {
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.setTextColor(160, 160, 160);
+        doc.text(`GreenOps Assessment — ${organisation.name}`, margin, 290);
+        doc.text(`Page ${i} of ${pageCount}`, pageW - margin, 290, { align: 'right' });
+      }
     }
 
-    if (!complete) {
+    // Helper: check if we need a page break, add one if so
+    function ensureSpace(y, needed) {
+      if (y + needed > bottomLimit) {
+        doc.addPage();
+        return 25;
+      }
+      return y;
+    }
+
+    // Helper: draw a section heading with teal underline
+    function sectionHeading(y, title) {
+      y = ensureSpace(y, 20);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(14);
+      doc.setTextColor(15, 31, 46);
+      doc.text(title, margin, y);
+      doc.setDrawColor(0, 169, 150);
+      doc.setLineWidth(0.5);
+      doc.line(margin, y + 2, margin + contentW, y + 2);
+      return y + 10;
+    }
+
+    // ========================================================================
+    // PAGE 1 — Cover page
+    // ========================================================================
+    // Top accent bar
+    doc.setFillColor(15, 31, 46);
+    doc.rect(0, 0, pageW, 80, 'F');
+    doc.setFillColor(0, 169, 150);
+    doc.rect(0, 80, pageW, 3, 'F');
+
+    // Title
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(26);
+    doc.setTextColor(255, 255, 255);
+    doc.text('GreenOps Organisational', 105, 38, { align: 'center' });
+    doc.text('Assessment Report', 105, 52, { align: 'center' });
+
+    // Subtitle
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(0, 169, 150);
+    doc.text('TBM Council  |  GreenOps Practice', 105, 66, { align: 'center' });
+
+    // Organisation details card
+    let y = 100;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.setTextColor(15, 31, 46);
+    doc.text(organisation.name, margin, y);
+    y += 12;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(90, 106, 122);
+    const orgDetails = [
+      ['Sector', organisation.sector],
+      ['Size', organisation.sizeBand],
+    ];
+    if (organisation.region) orgDetails.push(['Region', organisation.region]);
+    if (organisation.respondentName) orgDetails.push(['Respondent', organisation.respondentName]);
+    orgDetails.push(['Date', date]);
+
+    orgDetails.forEach(([label, value]) => {
+      doc.setFont('helvetica', 'bold');
       doc.setFontSize(10);
+      doc.text(`${label}:`, margin, y);
+      doc.setFont('helvetica', 'normal');
+      doc.text(value, margin + 28, y);
+      y += 7;
+    });
+
+    // Overall result highlight box
+    y += 10;
+    doc.setFillColor(245, 247, 250);
+    doc.roundedRect(margin, y - 6, contentW, 42, 3, 3, 'F');
+    doc.setDrawColor(0, 169, 150);
+    doc.setLineWidth(0.8);
+    doc.line(margin, y - 6, margin, y + 36);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(90, 106, 122);
+    doc.text('OVERALL MATURITY', margin + 8, y + 2);
+
+    doc.setFontSize(32);
+    doc.setTextColor(0, 169, 150);
+    doc.text(`${Math.round(overall.percentage)}%`, margin + 8, y + 20);
+
+    doc.setFontSize(14);
+    doc.setTextColor(15, 31, 46);
+    doc.text(`Level ${overall.maturity.level}: ${overall.maturity.name}`, margin + 55, y + 15);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(90, 106, 122);
+    doc.text(`${overall.totalRaw} / ${overall.totalMax} points`, margin + 55, y + 24);
+
+    if (!complete) {
+      y += 48;
+      doc.setFontSize(9);
       doc.setTextColor(200, 120, 0);
-      doc.text('Note: Assessment is partially complete. Results based on answered questions only.', 20, scoreY + 66);
+      doc.text('Note: Assessment is partially complete. Results based on answered questions only.', margin, y);
+    }
+
+    // ========================================================================
+    // PAGE 2 — About the Assessment
+    // ========================================================================
+    doc.addPage();
+    y = 25;
+    y = sectionHeading(y, 'About This Assessment');
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(50, 50, 50);
+
+    const introParas = [
+      'This report presents the results of a GreenOps maturity assessment conducted using the TBM Council\'s diagnostic framework. The assessment is designed to provide an evidence-based, structured view of how well an organisation\'s IT operations align with digital sustainability objectives.',
+      'The GreenOps framework evaluates maturity across ten operational domains that together span the full scope of enterprise IT — from board-level strategy and governance through to data centres, cloud operations, AI workloads, software development, and end-user services. Each domain is scored independently, producing both a domain-level maturity rating and an overall organisational score.',
+      'Maturity is measured on a five-level scale:',
+    ];
+
+    introParas.forEach((para) => {
+      const lines = doc.splitTextToSize(para, contentW);
+      doc.text(lines, margin, y);
+      y += lines.length * 5 + 4;
+    });
+
+    // Maturity level descriptions
+    const maturityLevels = [
+      { name: 'Level 1 — Initial', color: [156, 163, 175], desc: 'Little or no formal sustainability consideration in IT operations.' },
+      { name: 'Level 2 — Emerging', color: [96, 165, 250], desc: 'Awareness is growing and some initiatives are underway, but practices are inconsistent.' },
+      { name: 'Level 3 — Established', color: [243, 162, 97], desc: 'Structured programmes exist with defined processes, metrics, and accountability.' },
+      { name: 'Level 4 — Optimised', color: [0, 169, 150], desc: 'Sustainability is embedded in decision-making with continuous improvement and clear targets.' },
+      { name: 'Level 5 — Leading', color: [15, 31, 46], desc: 'Industry-leading practices with innovation, external benchmarking, and strategic influence.' },
+    ];
+
+    maturityLevels.forEach((level) => {
+      doc.setFillColor(...level.color);
+      doc.rect(margin + 4, y - 3, 3, 5, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(15, 31, 46);
+      doc.text(level.name, margin + 10, y);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(80, 80, 80);
+      doc.text(` — ${level.desc}`, margin + 10 + doc.getTextWidth(level.name), y);
+      y += 7;
+    });
+
+    y += 4;
+    const coverageIntro = 'The ten domains assessed in this report are:';
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(50, 50, 50);
+    doc.text(coverageIntro, margin, y);
+    y += 7;
+
+    // Domain listing in two columns
+    const domainNames = DOMAINS.map((d) => d.name);
+    const col1 = domainNames.slice(0, 5);
+    const col2 = domainNames.slice(5);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(50, 50, 50);
+    for (let i = 0; i < 5; i++) {
+      if (col1[i]) doc.text(`${i + 1}.  ${col1[i]}`, margin + 4, y);
+      if (col2[i]) doc.text(`${i + 6}.  ${col2[i]}`, margin + 90, y);
+      y += 6;
+    }
+
+    y += 6;
+    const methodNote = `This assessment comprises ${answeredDomains.length > 0 ? domainScores.length : 10} domains. Each question is scored from 0 (no practice) to 10 (leading practice), producing a percentage score per domain and an overall weighted maturity level. The results that follow provide domain-level scores, visual profiles, strategic insights, and structured commentary to help prioritise action.`;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(50, 50, 50);
+    const methodLines = doc.splitTextToSize(methodNote, contentW);
+    doc.text(methodLines, margin, y);
+    y += methodLines.length * 5 + 4;
+
+    // ========================================================================
+    // PAGE 3 — Overall Results: characteristics, strengths, priorities
+    // ========================================================================
+    doc.addPage();
+    y = 25;
+    y = sectionHeading(y, 'Overall Results');
+
+    // Overall maturity characteristics
+    const overallDesc = OVERALL_MATURITY_CHARACTERISTICS[overall.maturity.name];
+    if (overallDesc) {
+      doc.setFillColor(245, 247, 250);
+      const descLines = doc.splitTextToSize(overallDesc, contentW - 16);
+      const boxH = descLines.length * 4.5 + 10;
+      doc.roundedRect(margin, y - 4, contentW, boxH, 2, 2, 'F');
+
+      const color = overall.maturity.color;
+      const r = parseInt(color.slice(1, 3), 16);
+      const g = parseInt(color.slice(3, 5), 16);
+      const b = parseInt(color.slice(5, 7), 16);
+      doc.setFillColor(r, g, b);
+      doc.rect(margin, y - 4, 3, boxH, 'F');
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(50, 50, 50);
+      doc.text(descLines, margin + 8, y + 2);
+      y += boxH + 8;
     }
 
     // Strengths & Priority Areas
-    let spY = complete ? scoreY + 68 : scoreY + 80;
     if (topDomains.length > 0) {
+      y = ensureSpace(y, 40);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(12);
       doc.setTextColor(15, 31, 46);
-      doc.text('Strengths & Priority Areas', 20, spY);
-      spY += 8;
+      doc.text('Strengths & Priority Areas', margin, y);
+      y += 8;
 
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(10);
       doc.setTextColor(0, 169, 150);
-      doc.text('Strongest Areas', 20, spY);
-      spY += 5;
+      doc.text('Strongest Areas', margin, y);
+      y += 6;
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
-      doc.setTextColor(60, 60, 60);
+      doc.setTextColor(50, 50, 50);
       topDomains.forEach((d) => {
-        doc.text(`• ${getDomainName(d)} — ${Math.round(d.percentage)}% (${d.maturity.name})`, 24, spY);
-        spY += 5;
+        doc.text(`•  ${getDomainName(d)} — ${Math.round(d.percentage)}% (${d.maturity.name})`, margin + 4, y);
+        y += 5;
       });
 
       if (bottomDomains.length > 0) {
-        spY += 3;
+        y += 4;
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(10);
         doc.setTextColor(200, 120, 0);
-        doc.text('Priority Areas', 20, spY);
-        spY += 5;
+        doc.text('Priority Areas', margin, y);
+        y += 6;
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
-        doc.setTextColor(60, 60, 60);
+        doc.setTextColor(50, 50, 50);
         bottomDomains.forEach((d) => {
-          doc.text(`• ${getDomainName(d)} — ${Math.round(d.percentage)}% (${d.maturity.name})`, 24, spY);
-          spY += 5;
+          doc.text(`•  ${getDomainName(d)} — ${Math.round(d.percentage)}% (${d.maturity.name})`, margin + 4, y);
+          y += 5;
         });
       }
     }
 
-    // ---- Page 2 — Bar chart ----
-    doc.addPage();
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(16);
-    doc.setTextColor(15, 31, 46);
-    doc.text('Domain Maturity', 20, 25);
+    // ========================================================================
+    // Charts — Bar chart + Radar on same page (or flowing into next)
+    // ========================================================================
+    y += 8;
+    y = sectionHeading(y, 'Domain Maturity Profile');
 
+    // Bar chart
     if (barRef.current) {
+      y = ensureSpace(y, 90);
       try {
         const barImage = barRef.current.toBase64Image();
-        doc.addImage(barImage, 'PNG', 10, 32, 190, 100);
-      } catch (e) { /* skip if capture fails */ }
+        doc.addImage(barImage, 'PNG', margin - 10, y, 190, 85);
+        y += 90;
+      } catch (e) { /* skip */ }
     }
 
-    // ---- Page 3 — Radar chart ----
-    doc.addPage();
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(16);
-    doc.setTextColor(15, 31, 46);
-    doc.text('Maturity Radar', 20, 25);
-
-    if (radarRef.current) {
+    // Radar chart — if enough answered domains
+    if (radarRef.current && answeredDomains.length >= 3) {
+      y = ensureSpace(y, 120);
       try {
         const chartImage = radarRef.current.toBase64Image();
-        doc.addImage(chartImage, 'PNG', 20, 35, 170, 170);
-      } catch (e) {
-        doc.setFontSize(10);
-        doc.setTextColor(200, 0, 0);
-        doc.text('Radar chart could not be captured.', 20, 40);
-      }
+        doc.addImage(chartImage, 'PNG', 35, y, 140, 115);
+        y += 120;
+      } catch (e) { /* skip */ }
     }
 
-    // ---- Strategic Insights page ----
+    // ========================================================================
+    // Strategic Insights — flows continuously
+    // ========================================================================
     if (strategicInsights.length > 0) {
-      doc.addPage();
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.setTextColor(15, 31, 46);
-      doc.text('Strategic Insights', 20, 25);
+      y += 4;
+      y = sectionHeading(y, 'Strategic Insights');
 
-      let insightY = 38;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(90, 106, 122);
+      doc.text('Patterns detected from your domain scores that may inform your GreenOps programme.', margin, y);
+      y += 7;
+
+      const severityColors = {
+        high: [220, 38, 38],
+        medium: [217, 119, 6],
+        positive: [0, 169, 150],
+        info: [59, 130, 246],
+      };
+
       strategicInsights.forEach((insight) => {
-        if (insightY > 240) {
-          doc.addPage();
-          insightY = 25;
-        }
+        const msgLines = doc.splitTextToSize(insight.message, contentW - 10);
+        const blockH = 6 + msgLines.length * 4 + 4;
+        y = ensureSpace(y, blockH + 4);
 
-        // Severity colour indicator
-        const severityColors = {
-          high: [220, 38, 38],
-          medium: [217, 119, 6],
-          positive: [0, 169, 150],
-          info: [59, 130, 246],
-        };
         const color = severityColors[insight.severity] || severityColors.info;
         doc.setFillColor(...color);
-        doc.rect(20, insightY - 4, 3, 6, 'F');
+        doc.rect(margin, y - 4, 3, blockH - 2, 'F');
 
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(11);
+        doc.setFontSize(10);
         doc.setTextColor(15, 31, 46);
-        doc.text(insight.label, 26, insightY);
-        insightY += 6;
+        doc.text(insight.label, margin + 6, y);
+        y += 6;
 
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
         doc.setTextColor(60, 60, 60);
-        const lines = doc.splitTextToSize(insight.message, 164);
-        doc.text(lines, 26, insightY);
-        insightY += lines.length * 4 + 10;
+        doc.text(msgLines, margin + 6, y);
+        y += msgLines.length * 4 + 8;
       });
     }
 
-    // ---- Recommended Next Steps page ----
+    // ========================================================================
+    // Recommended Next Steps — flows continuously
+    // ========================================================================
     if (nextSteps) {
-      doc.addPage();
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.setTextColor(15, 31, 46);
-      doc.text('Recommended Next Steps', 20, 25);
-
-      let nsY = 38;
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(10);
-      doc.setTextColor(60, 60, 60);
+      y += 4;
+      y = sectionHeading(y, 'Recommended Next Steps');
 
       const targetText = nextSteps.target
         ? `Current level: ${overall.maturity.name}  →  Target: ${nextSteps.target}`
         : `Current level: ${overall.maturity.name}`;
-      doc.text(targetText, 20, nsY);
-      nsY += 8;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(90, 106, 122);
+      doc.text(targetText, margin, y);
+      y += 7;
 
-      const summaryLines = doc.splitTextToSize(nextSteps.summary, 170);
-      doc.text(summaryLines, 20, nsY);
-      nsY += summaryLines.length * 5 + 6;
+      const summaryLines = doc.splitTextToSize(nextSteps.summary, contentW);
+      doc.setFontSize(9);
+      doc.setTextColor(50, 50, 50);
+      doc.text(summaryLines, margin, y);
+      y += summaryLines.length * 4.5 + 6;
 
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(10);
       doc.setTextColor(15, 31, 46);
-      doc.text('Priority Actions', 20, nsY);
-      nsY += 7;
+      doc.text('Priority Actions', margin, y);
+      y += 7;
 
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
-      doc.setTextColor(60, 60, 60);
+      doc.setTextColor(50, 50, 50);
       nextSteps.actions.forEach((action, idx) => {
-        if (nsY > 270) {
-          doc.addPage();
-          nsY = 25;
-        }
-        const actionLines = doc.splitTextToSize(`${idx + 1}. ${action}`, 164);
-        doc.text(actionLines, 24, nsY);
-        nsY += actionLines.length * 4 + 4;
+        const actionLines = doc.splitTextToSize(`${idx + 1}. ${action}`, contentW - 8);
+        y = ensureSpace(y, actionLines.length * 4 + 4);
+        doc.text(actionLines, margin + 4, y);
+        y += actionLines.length * 4 + 4;
       });
     }
 
-    // ---- Domain Commentary (with colour accent) ----
-    doc.addPage();
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(16);
-    doc.setTextColor(15, 31, 46);
-    doc.text('Domain Assessment Commentary', 20, 25);
+    // ========================================================================
+    // Domain Assessment Commentary — flows continuously
+    // ========================================================================
+    y += 4;
+    y = sectionHeading(y, 'Domain Assessment Commentary');
 
-    let commentY = 38;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(90, 106, 122);
+    doc.text('Structured feedback on your current maturity level for each assessed domain.', margin, y);
+    y += 8;
 
-    // Only include answered domains in commentary
     answeredDomains.forEach((d) => {
       const name = getDomainName(d);
       const description = getDescription(d.domainId, d.maturity.name);
+      const descLines = description ? doc.splitTextToSize(description, contentW - 10) : [];
+      const blockH = 8 + (descLines.length > 0 ? descLines.length * 4 + 4 : 4);
 
-      if (commentY > 240) {
-        doc.addPage();
-        commentY = 25;
-      }
+      y = ensureSpace(y, blockH + 4);
 
-      // Colour accent bar (left edge)
+      // Colour accent bar
       const color = d.maturity.color;
       const r = parseInt(color.slice(1, 3), 16);
       const g = parseInt(color.slice(3, 5), 16);
       const b = parseInt(color.slice(5, 7), 16);
       doc.setFillColor(r, g, b);
-      doc.rect(20, commentY - 4, 3, description ? 6 : 6, 'F');
+      doc.rect(margin, y - 4, 3, blockH - 2, 'F');
 
-      // Domain heading with maturity level
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(11);
+      doc.setFontSize(10);
       doc.setTextColor(15, 31, 46);
-      doc.text(`${name}  —  Level ${d.maturity.level}: ${d.maturity.name} (${Math.round(d.percentage)}%)`, 26, commentY);
-      commentY += 6;
+      doc.text(`${name}  —  Level ${d.maturity.level}: ${d.maturity.name} (${Math.round(d.percentage)}%)`, margin + 6, y);
+      y += 6;
 
-      if (description) {
+      if (descLines.length > 0) {
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
         doc.setTextColor(60, 60, 60);
-        const lines = doc.splitTextToSize(description, 164);
-        doc.text(lines, 26, commentY);
-        commentY += lines.length * 4 + 8;
+        doc.text(descLines, margin + 6, y);
+        y += descLines.length * 4 + 6;
       } else {
-        commentY += 8;
+        y += 6;
       }
     });
 
     // Note unanswered domains
     if (unansweredDomains.length > 0) {
-      if (commentY > 250) { doc.addPage(); commentY = 25; }
-      commentY += 4;
+      y = ensureSpace(y, 12);
+      y += 2;
       doc.setFont('helvetica', 'italic');
       doc.setFontSize(9);
       doc.setTextColor(140, 140, 140);
       const unansweredNames = unansweredDomains.map(getDomainName).join(', ');
-      doc.text(`Not assessed: ${unansweredNames}`, 20, commentY);
+      doc.text(`Not assessed: ${unansweredNames}`, margin, y);
+      y += 8;
     }
 
-    // ---- Remaining pages — All question responses grouped by domain ----
+    // ========================================================================
+    // Detailed Responses — always starts a new page
+    // ========================================================================
     doc.addPage();
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(16);
-    doc.setTextColor(15, 31, 46);
-    doc.text('Detailed Responses', 20, 25);
+    y = 25;
+    y = sectionHeading(y, 'Detailed Responses');
 
     const responsesByDomain = {};
     exportData.responses.forEach((r) => {
@@ -609,7 +776,7 @@ export default function Results() {
       responsesByDomain[r.domain].push(r);
     });
 
-    let currentY = 35;
+    let currentY = y;
 
     Object.entries(responsesByDomain).forEach(([domainName, responses]) => {
       if (currentY > 250) { doc.addPage(); currentY = 25; }
@@ -617,7 +784,7 @@ export default function Results() {
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(11);
       doc.setTextColor(15, 31, 46);
-      doc.text(domainName, 20, currentY);
+      doc.text(domainName, margin, currentY);
       currentY += 4;
 
       const rows = responses.map((r) => [
@@ -637,12 +804,15 @@ export default function Results() {
         bodyStyles: { fontSize: 7, textColor: [28, 43, 58], cellPadding: 2 },
         alternateRowStyles: { fillColor: [230, 246, 244] },
         columnStyles: { 0: { cellWidth: 16 }, 1: { cellWidth: 82 }, 2: { cellWidth: 28 }, 3: { cellWidth: 14, halign: 'center' }, 4: { cellWidth: 14, halign: 'center' } },
-        margin: { left: 20, right: 20 },
+        margin: { left: margin, right: margin },
         didDrawPage: () => { currentY = 25; },
       });
 
       currentY = doc.lastAutoTable.finalY + 10;
     });
+
+    // Add footers to all pages
+    addFooter();
 
     doc.save(`GreenOps_Assessment_${organisation.name}_${date}.pdf`);
     } catch (err) {
