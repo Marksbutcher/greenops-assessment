@@ -166,11 +166,15 @@ export function AssessmentProvider({ children }) {
       const questions = getQuestionsForDomain(domain.id);
       for (const q of questions) {
         const resp = responses[q.id];
+        // Map option letter to full answer text
+        const optionTextMap = { A: q.optionA, B: q.optionB, C: q.optionC, D: q.optionD, E: q.optionE };
+        const selectedOptionText = resp?.option ? (optionTextMap[resp.option] || resp.option) : '';
         allResponses.push({
           domain: domain.name,
           questionId: q.displayId,
           question: q.text,
           selectedOption: resp?.option || '',
+          selectedOptionText,
           score: resp?.score ?? '',
           maxScore: q.maxScore,
         });

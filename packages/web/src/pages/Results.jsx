@@ -790,20 +790,20 @@ export default function Results() {
       const rows = responses.map((r) => [
         r.questionId,
         r.question,
-        r.selectedOption || '-',
+        r.selectedOptionText || r.selectedOption || '-',
         String(r.score),
         String(r.maxScore),
       ]);
 
       doc.autoTable({
         startY: currentY,
-        head: [['ID', 'Question', 'Answer', 'Score', 'Max']],
+        head: [['ID', 'Question', 'Selected Answer', 'Score', 'Max']],
         body: rows,
         theme: 'grid',
         headStyles: { fillColor: [0, 169, 150], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
         bodyStyles: { fontSize: 7, textColor: [28, 43, 58], cellPadding: 2 },
         alternateRowStyles: { fillColor: [230, 246, 244] },
-        columnStyles: { 0: { cellWidth: 16 }, 1: { cellWidth: 82 }, 2: { cellWidth: 28 }, 3: { cellWidth: 14, halign: 'center' }, 4: { cellWidth: 14, halign: 'center' } },
+        columnStyles: { 0: { cellWidth: 12 }, 1: { cellWidth: 58 }, 2: { cellWidth: 62 }, 3: { cellWidth: 12, halign: 'center' }, 4: { cellWidth: 12, halign: 'center' } },
         margin: { left: margin, right: margin },
         didDrawPage: () => { currentY = 25; },
       });
@@ -825,12 +825,13 @@ export default function Results() {
   function handleDownloadCSV() {
     const exportData = getExportData();
     const date = formatDate();
-    const headers = ['Domain', 'Question ID', 'Question', 'Selected Option', 'Score', 'Max Score'];
+    const headers = ['Domain', 'Question ID', 'Question', 'Option', 'Selected Answer', 'Score', 'Max Score'];
     const rows = exportData.responses.map((r) => [
       `"${(r.domain || '').replace(/"/g, '""')}"`,
       `"${(r.questionId || '').replace(/"/g, '""')}"`,
       `"${(r.question || '').replace(/"/g, '""')}"`,
       `"${(r.selectedOption || '').replace(/"/g, '""')}"`,
+      `"${(r.selectedOptionText || '').replace(/"/g, '""')}"`,
       r.score,
       r.maxScore,
     ]);
