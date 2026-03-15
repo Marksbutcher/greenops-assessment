@@ -33,40 +33,69 @@ export default function Welcome() {
   return (
     <div className="min-h-screen bg-content-bg">
       {/* Hero section */}
-      <div className="bg-navy">
-        <div className="max-w-4xl mx-auto px-6 py-16 text-center">
+      <div className="relative overflow-hidden">
+        {/* Navy background with subtle gradient */}
+        <div className="absolute inset-0 bg-navy" />
+        {/* Decorative teal accent — angled stripe */}
+        <div className="absolute -right-20 top-0 w-[600px] h-full bg-teal/[0.06] -skew-x-12 origin-top-right" />
+        <div className="absolute -right-40 top-0 w-[300px] h-full bg-teal/[0.04] -skew-x-12 origin-top-right" />
+
+        <div className="relative max-w-4xl mx-auto px-6 pt-12 pb-16 text-center">
           {/* TBM Council branding */}
-          <p className="text-teal-light text-xs font-bold tracking-[0.25em] uppercase mb-8">
+          <p className="text-teal-light text-xs font-bold tracking-[0.25em] uppercase mb-6">
             TBM Council &nbsp;|&nbsp; GreenOps Practice
           </p>
 
-          {/* Headline */}
-          <h1 className="font-georgia text-white text-3xl sm:text-4xl md:text-5xl leading-tight mb-8">
+          {/* Title lockup */}
+          <div className="mb-8">
+            <h1 className="font-georgia text-white text-4xl sm:text-5xl md:text-6xl leading-[1.1] mb-3">
+              <span className="text-teal">GreenOps</span> Maturity
+            </h1>
+            <h1 className="font-georgia text-white text-4xl sm:text-5xl md:text-6xl leading-[1.1]">
+              Assessment
+            </h1>
+            {/* Teal accent underline */}
+            <div className="mt-4 mx-auto w-24 h-1 rounded-full bg-teal" />
+          </div>
+
+          {/* Tagline */}
+          <p className="font-georgia text-gray-300 text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed mb-8 italic">
             Digital sustainability maturity varies widely. Most organisations overestimate where they are.
-          </h1>
+          </p>
 
           {/* Body copy */}
-          <p className="text-gray-300 text-base sm:text-lg max-w-3xl mx-auto leading-relaxed mb-6">
+          <p className="text-gray-400 text-sm sm:text-base max-w-3xl mx-auto leading-relaxed mb-5">
             Strategy commitments rarely survive contact with operational reality. Digital
             sustainability spans every layer of how you run IT — from governance, procurement,
             infrastructure, cloud, AI, software, and end-user services — with gaps in any one
             area creating cost, compliance risk, and reputational exposure.
           </p>
 
-          <p className="text-gray-300 text-base sm:text-lg max-w-3xl mx-auto leading-relaxed mb-10">
-            This diagnostic assesses your organisation's GreenOps maturity across ten operational
+          <p className="text-gray-400 text-sm sm:text-base max-w-3xl mx-auto leading-relaxed mb-10">
+            This diagnostic assesses your organisation across ten operational
             domains, from board-level strategy to device end-of-life. The output is not a score — it
             is a structured evidence base for prioritising action and making the case for investment.
           </p>
 
-          {/* Time estimate badge */}
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur rounded-full px-5 py-2.5 mb-4">
-            <svg className="w-5 h-5 text-teal-light" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span className="text-white text-sm font-bold">~2–4 hours across your team</span>
+          {/* Time estimate + domain count badges */}
+          <div className="flex flex-wrap items-center justify-center gap-3 mb-4">
+            <div className="inline-flex items-center gap-2 bg-teal/15 border border-teal/30 rounded-full px-5 py-2.5">
+              <svg className="w-5 h-5 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              <span className="text-white text-sm font-bold">10 Domains &middot; 184 Questions</span>
+            </div>
+            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/15 rounded-full px-5 py-2.5">
+              <svg className="w-5 h-5 text-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-white text-sm font-bold">~2–4 hours across your team</span>
+            </div>
           </div>
         </div>
+
+        {/* Bottom teal accent bar */}
+        <div className="relative h-1 bg-gradient-to-r from-teal/60 via-teal to-teal/60" />
       </div>
 
       {/* What you get section */}
