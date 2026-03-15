@@ -1,0 +1,171 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --navy: #0F1F2E;
+  --navy-deep: #111E2E;
+  --orange: #F3A261;
+  --teal: #00A996;
+  --teal-dark: #007A6E;
+  --content-bg: #F7F8FA;
+  --body-text: #1C2B3A;
+  --muted-text: #5A6A7A;
+  --card-border: #DDE2E8;
+  --lt-teal: #E6F6F4;
+  --lt-orange: #FEF0E6;
+  --white: #FFFFFF;
+}
+
+body {
+  font-family: 'Lato', 'Calibri', sans-serif;
+  color: var(--body-text);
+  background-color: var(--content-bg);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: Georgia, serif;
+}
+
+/* Section label style (domain chips, screen labels) */
+.section-label {
+  font-family: 'Lato', 'Calibri', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  color: var(--orange);
+}
+
+/* Orange letter chip */
+.letter-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  background-color: var(--orange);
+  color: var(--white);
+  font-family: Georgia, serif;
+  font-weight: 700;
+  font-size: 16px;
+  border-radius: 4px;
+}
+
+/* Answer card states */
+.answer-card {
+  background: var(--white);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 150ms ease;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.answer-card:hover:not(.answer-card--selected):not(.answer-card--disabled) {
+  background: var(--lt-orange);
+  border-color: var(--orange);
+}
+
+.answer-card--selected {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: var(--white);
+}
+
+.answer-card--selected .letter-chip {
+  background: var(--white);
+  color: var(--teal);
+}
+
+.answer-card--selected .answer-card__text {
+  color: var(--white);
+  font-weight: 700;
+}
+
+.answer-card--disabled {
+  opacity: 0.4;
+}
+
+.answer-card--error {
+  background: var(--lt-orange);
+  border: 2px solid #e53e3e;
+  animation: shake 0.3s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* Card with left accent strip */
+.card-accent {
+  border-left: 6px solid var(--orange);
+}
+
+.card-accent--teal {
+  border-left-color: var(--teal);
+}
+
+/* Progress bar */
+.progress-bar {
+  height: 8px;
+  background: var(--lt-teal);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar__fill {
+  height: 100%;
+  background: var(--orange);
+  border-radius: 4px;
+  transition: width 300ms ease;
+}
+
+/* Status badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.status-badge--not-started {
+  background: var(--muted-text);
+  color: var(--white);
+}
+
+.status-badge--in-progress {
+  background: var(--lt-orange);
+  color: var(--orange);
+}
+
+.status-badge--complete {
+  background: var(--lt-teal);
+  color: var(--teal-dark);
+}
+
+.status-badge--under-review {
+  background: #EDE9FE;
+  color: #7C3AED;
+}
+
+.status-badge--report-ready {
+  background: var(--teal);
+  color: var(--white);
+}
+
+/* Maturity level colours */
+.maturity-1 { background: #F5F5F5; }
+.maturity-2 { background: #E8F0FE; }
+.maturity-3 { background: var(--lt-orange); }
+.maturity-4 { background: var(--lt-teal); }
+.maturity-5 { background: var(--navy); color: var(--white); }
